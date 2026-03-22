@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL语句生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 0;
+            position: sticky;
+            top: 30px;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .panel-header p {
+            margin: 8px 0 0 0;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .right-panel .panel-header {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #28a745;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            color: #333;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .step-description {
+            color: #666;
+            margin-top: 10px;
+            margin-left: 55px;
+        }
+
+        .input-group {
+            margin-top: 20px;
+            margin-left: 55px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .hint {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        .field-section {
+            margin-top: 20px;
+            margin-left: 55px;
+        }
+
+        .table-fields {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .table-fields h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .table-fields textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Consolas', 'Monaco', monospace;
+            transition: border-color 0.3s ease;
+            resize: vertical;
+        }
+
+        .table-fields textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .relationship-section {
+            margin-top: 20px;
+            margin-left: 55px;
+        }
+
+        .where-section {
+            margin-top: 20px;
+            margin-left: 55px;
+        }
+
+        .where-condition-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .where-condition-item select, .where-condition-item input, .where-condition-item textarea {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            min-width: 120px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            transition: border-color 0.3s ease;
+        }
+
+        .where-condition-item select:focus, .where-condition-item input:focus, .where-condition-item textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .where-condition-item textarea {
+            resize: vertical;
+        }
+
+        .where-label {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .where-value-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .between-separator {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .relationship-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .relationship-item select, .relationship-item input {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            min-width: 150px;
+        }
+
+        .relationship-item select:focus, .relationship-item input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .relationship-label {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .action-buttons .btn {
+            margin: 0 10px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-header h3 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .sql-output {
+            background: #2d3748;
+            color: #68d391;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 1.1em;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 150px;
+        }
+
+        .copy-btn {
+            position: relative;
+        }
+
+        .copy-btn.copied::after {
+            content: '已复制!';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+                flex-direction: column;
+            }
+
+            .step {
+                padding: 20px;
+            }
+
+            .input-group, .field-section, .relationship-section {
+                margin-left: 0;
+            }
+
+            .relationship-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .relationship-item select, .relationship-item input {
+                width: 100%;
+            }
+
+            .right-panel {
+                position: static;
+            }
+
+            .panel-header {
+                border-radius: 15px 15px 0 0;
+                margin-bottom: 15px;
+            }
+
+            .panel-header h2 {
+                font-size: 1.1em;
+            }
+
+            .panel-header p {
+                font-size: 0.85em;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SQL语句生成器</h1>
+            <p>无需编写SQL，轻松生成专业查询语句</p>
+        </div>
+
+        <div class="content">
+            <div class="left-panel">
+                <div class="panel-header">
+                    <h2>配置区域</h2>
+                    <p>在此区域输入SQL查询所需的表名、字段、关联关系和筛选条件</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <span class="step-title">输入库表名称</span>
+                    <div class="step-description">
+                        请输入需要查询的数据库表名称，多个表请用回车分隔
+                    </div>
+                    <div class="input-group">
+                        <textarea id="tableNames" placeholder="例如：
+users
+orders
+products" onblur="generateFieldInputs()"></textarea>
+                        <div class="hint">提示：输入表名后点击其他区域，系统将自动生成字段输入框</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <span class="step-title">选择抓取字段</span>
+                    <div class="step-description">
+                        为每个表选择需要查询的字段，多个字段请用回车分隔
+                    </div>
+                    <div class="field-section" id="fieldSection">
+                        <div class="empty-state" id="fieldEmptyState">
+                            请先输入表名，字段输入框将在此处显示
+                        </div>
+                        <div id="fieldInputs"></div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <span class="step-title">设置表关联关系</span>
+                    <div class="step-description">
+                        配置表之间的LEFT JOIN关联关系和绑定字段
+                    </div>
+                    <div class="relationship-section">
+                        <div id="relationshipContainer">
+                            <div class="empty-state" id="relationshipEmptyState">
+                                输入多个表名后，可在此设置表之间的关联关系
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button type="button" class="btn btn-secondary" onclick="addRelationship()" id="addRelationBtn" style="display: none;">
+                                + 添加关联关系
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <span class="step-title">设置WHERE筛选条件</span>
+                    <div class="step-description">
+                        添加查询筛选条件，支持 = / IN / LIKE / BETWEEN...AND 等运算符。
+                        若存在多个筛选条件，则自动适用条件并列AND进行筛选。
+                    </div>
+                    <div class="where-section" id="whereSection">
+                        <div class="empty-state" id="whereEmptyState">
+                            请先输入表名和字段，条件选项将在此处显示
+                        </div>
+                        <div id="whereConditions"></div>
+                        <div style="margin-top: 15px;">
+                            <button type="button" class="btn btn-secondary" onclick="addWhereCondition()" id="addWhereBtn" style="display: none;">
+                                + 添加筛选条件
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-primary" onclick="generateSQL()">
+                        SQL生成
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearAll()">
+                        清空重置
+                    </button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-header">
+                    <h2>结果区域</h2>
+                    <p>生成的SQL语句将在此区域显示，可直接复制使用</p>
+                </div>
+                <div class="result-section" id="resultSection" style="display: none;">
+                    <div class="result-header">
+                        <h3>生成的SQL语句</h3>
+                        <button type="button" class="btn btn-success copy-btn" id="copyBtn" onclick="copySQL()">
+                            复制SQL
+                        </button>
+                    </div>
+                    <pre class="sql-output" id="sqlOutput"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tableData = {};
+        let relationships = [];
+        let whereConditions = [];
+
+        function generateFieldInputs() {
+            const tableNamesInput = document.getElementById('tableNames').value.trim();
+            const fieldInputsDiv = document.getElementById('fieldInputs');
+            const fieldEmptyState = document.getElementById('fieldEmptyState');
+            const relationshipContainer = document.getElementById('relationshipContainer');
+            const relationshipEmptyState = document.getElementById('relationshipEmptyState');
+            const addRelationBtn = document.getElementById('addRelationBtn');
+            const whereEmptyState = document.getElementById('whereEmptyState');
+            const addWhereBtn = document.getElementById('addWhereBtn');
+
+            if (!tableNamesInput) {
+                fieldInputsDiv.innerHTML = '';
+                fieldEmptyState.style.display = 'block';
+                relationshipEmptyState.style.display = 'block';
+                addRelationBtn.style.display = 'none';
+                whereEmptyState.style.display = 'block';
+                addWhereBtn.style.display = 'none';
+                tableData = {};
+                relationships = [];
+                whereConditions = [];
+                relationshipContainer.innerHTML = '';
+                relationshipContainer.appendChild(relationshipEmptyState);
+                document.getElementById('whereConditions').innerHTML = '';
+                return;
+            }
+
+            const tableNames = tableNamesInput.split('\n').map(name => name.trim()).filter(name => name);
+
+            if (tableNames.length === 0) {
+                fieldInputsDiv.innerHTML = '';
+                fieldEmptyState.style.display = 'block';
+                return;
+            }
+
+            fieldEmptyState.style.display = 'none';
+
+            const existingData = { ...tableData };
+            tableData = {};
+
+            let html = '';
+            tableNames.forEach((tableName, index) => {
+                const existingFields = existingData[tableName] || '';
+                tableData[tableName] = existingFields;
+
+                const alias = generateAlias(index);
+                html += `
+                    <div class="table-fields fade-in" style="animation-delay: ${index * 0.1}s">
+                        <h4>表: ${escapeHtml(tableName)} (简写: ${alias})</h4>
+                        <textarea id="fields_${escapeHtml(tableName)}" 
+                                  placeholder="输入字段名，用回车分隔&#10;例如：&#10;id&#10;name&#10;created_at"
+                                  onchange="updateTableData('${escapeHtml(tableName)}', this.value); updateWhereOptions();">${escapeHtml(existingFields)}</textarea>
+                        <div class="hint">提示：如需查询所有字段，请输入 *</div>
+                    </div>
+                `;
+            });
+
+            fieldInputsDiv.innerHTML = html;
+
+            if (tableNames.length >= 2) {
+                relationshipEmptyState.style.display = 'none';
+                addRelationBtn.style.display = 'inline-block';
+                updateRelationshipOptions();
+            } else {
+                relationshipEmptyState.style.display = 'block';
+                addRelationBtn.style.display = 'none';
+                relationships = [];
+                relationshipContainer.innerHTML = '';
+                relationshipContainer.appendChild(relationshipEmptyState);
+            }
+
+            // 更新WHERE区域
+            updateWhereSection();
+        }
+
+        function updateWhereSection() {
+            const whereEmptyState = document.getElementById('whereEmptyState');
+            const addWhereBtn = document.getElementById('addWhereBtn');
+            const tableNames = Object.keys(tableData);
+
+            if (tableNames.length > 0) {
+                whereEmptyState.style.display = 'none';
+                addWhereBtn.style.display = 'inline-block';
+                updateWhereOptions();
+            } else {
+                whereEmptyState.style.display = 'block';
+                addWhereBtn.style.display = 'none';
+                whereConditions = [];
+                document.getElementById('whereConditions').innerHTML = '';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function generateAlias(index) {
+            let result = '';
+            let num = index;
+            do {
+                result = String.fromCharCode(97 + (num % 26)) + result;
+                num = Math.floor(num / 26);
+            } while (num > 0);
+            return result;
+        }
+
+        function getTableAliasMap(tableNames) {
+            const aliasMap = {};
+            tableNames.forEach((tableName, index) => {
+                aliasMap[tableName] = generateAlias(index);
+            });
+            return aliasMap;
+        }
+
+        function updateTableData(tableName, value) {
+            tableData[tableName] = value;
+        }
+
+        function updateRelationshipOptions() {
+            const relationshipContainer = document.getElementById('relationshipContainer');
+            const tableNames = Object.keys(tableData);
+
+            if (relationships.length === 0) {
+                const relationshipEmptyState = document.getElementById('relationshipEmptyState');
+                relationshipContainer.innerHTML = '';
+                relationshipContainer.appendChild(relationshipEmptyState);
+                return;
+            }
+
+            let html = '';
+            relationships.forEach((rel, index) => {
+                html += `
+                    <div class="relationship-item fade-in">
+                        <span class="relationship-label">关联 ${index + 1}:</span>
+                        <select id="leftTable_${index}" onchange="updateRelationship(${index}, 'leftTable', this.value)">
+                            <option value="">选择左表</option>
+                            ${tableNames.map(t => `<option value="${escapeHtml(t)}" ${rel.leftTable === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
+                        </select>
+                        <span class="relationship-label">=</span>
+                        <select id="rightTable_${index}" onchange="updateRelationship(${index}, 'rightTable', this.value)">
+                            <option value="">选择右表</option>
+                            ${tableNames.map(t => `<option value="${escapeHtml(t)}" ${rel.rightTable === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('')}
+                        </select>
+                        <span class="relationship-label">绑定字段:</span>
+                        <input type="text" 
+                               id="leftField_${index}" 
+                               placeholder="左表字段"
+                               value="${escapeHtml(rel.leftField || '')}"
+                               onchange="updateRelationship(${index}, 'leftField', this.value)"
+                               style="min-width: 120px;">
+                        <span class="relationship-label">=</span>
+                        <input type="text" 
+                               id="rightField_${index}" 
+                               placeholder="右表字段"
+                               value="${escapeHtml(rel.rightField || '')}"
+                               onchange="updateRelationship(${index}, 'rightField', this.value)"
+                               style="min-width: 120px;">
+                        <button type="button" class="btn btn-danger" onclick="removeRelationship(${index})" style="padding: 8px 15px;">删除</button>
+                    </div>
+                `;
+            });
+
+            relationshipContainer.innerHTML = html;
+        }
+
+        function addRelationship() {
+            relationships.push({
+                leftTable: '',
+                rightTable: '',
+                leftField: '',
+                rightField: ''
+            });
+            updateRelationshipOptions();
+        }
+
+        function removeRelationship(index) {
+            relationships.splice(index, 1);
+            updateRelationshipOptions();
+        }
+
+        function updateRelationship(index, field, value) {
+            relationships[index][field] = value;
+        }
+
+        function getAllFields() {
+            const fields = [];
+            const tableNames = Object.keys(tableData);
+            const aliasMap = getTableAliasMap(tableNames);
+
+            tableNames.forEach(tableName => {
+                const fieldsInput = document.getElementById(`fields_${tableName}`);
+                if (fieldsInput && fieldsInput.value.trim()) {
+                    const fieldList = fieldsInput.value.split('\n').map(f => f.trim()).filter(f => f && f !== '*');
+                    const alias = aliasMap[tableName];
+                    fieldList.forEach(field => {
+                        fields.push({
+                            table: tableName,
+                            alias: alias,
+                            field: field,
+                            fullName: `${alias}.${field}`
+                        });
+                    });
+                }
+            });
+            return fields;
+        }
+
+        function updateWhereOptions() {
+            const whereConditionsDiv = document.getElementById('whereConditions');
+            const fields = getAllFields();
+
+            if (whereConditions.length === 0) {
+                whereConditionsDiv.innerHTML = '';
+                return;
+            }
+
+            const fieldOptions = fields.map(f => `<option value="${f.alias}.${f.field}" data-alias="${f.alias}" data-field="${f.field}">${f.fullName}</option>`).join('');
+
+            let html = '';
+            whereConditions.forEach((condition, index) => {
+                const isBetween = condition.operator === 'BETWEEN';
+                const valueHtml = isBetween ? `
+                    <textarea id="whereValue1_${index}" placeholder="起始值" rows="2"
+                           onchange="updateWhereCondition(${index}, 'value1', this.value)"
+                           style="min-width: 100px;">${escapeHtml(condition.value1 || '')}</textarea>
+                    <span class="between-separator">AND</span>
+                    <textarea id="whereValue2_${index}" placeholder="结束值" rows="2"
+                           onchange="updateWhereCondition(${index}, 'value2', this.value)"
+                           style="min-width: 100px;">${escapeHtml(condition.value2 || '')}</textarea>
+                ` : `
+                    <textarea id="whereValue_${index}" placeholder="输入条件值（可回车换行作为分隔符）" rows="3"
+                           onchange="updateWhereCondition(${index}, 'value', this.value)"
+                           style="min-width: 150px;">${escapeHtml(condition.value || '')}</textarea>
+                `;
+
+                html += `
+                    <div class="where-condition-item fade-in">
+                        <span class="where-label">条件 ${index + 1}:</span>
+                        <select id="whereField_${index}" onchange="updateWhereCondition(${index}, 'field', this.value)" style="min-width: 150px;">
+                            <option value="">选择字段</option>
+                            ${fieldOptions.replace(`value="${condition.field}"`, `value="${condition.field}" selected`)}
+                        </select>
+                        <select id="whereOperator_${index}" onchange="updateWhereCondition(${index}, 'operator', this.value); updateWhereOptions();" style="min-width: 120px;">
+                            <option value="=" ${condition.operator === '=' ? 'selected' : ''}>= (等于)</option>
+                            <option value="!=" ${condition.operator === '!=' ? 'selected' : ''}>!= (不等于)</option>
+                            <option value=">" ${condition.operator === '>' ? 'selected' : ''}>> (大于)</option>
+                            <option value="<" ${condition.operator === '<' ? 'selected' : ''}>< (小于)</option>
+                            <option value=">=" ${condition.operator === '>=' ? 'selected' : ''}>>= (大于等于)</option>
+                            <option value="<=" ${condition.operator === '<=' ? 'selected' : ''}><= (小于等于)</option>
+                            <option value="IN" ${condition.operator === 'IN' ? 'selected' : ''}>IN (在列表中)</option>
+                            <option value="NOT IN" ${condition.operator === 'NOT IN' ? 'selected' : ''}>NOT IN (不在列表中)</option>
+                            <option value="LIKE" ${condition.operator === 'LIKE' ? 'selected' : ''}>LIKE (模糊匹配)</option>
+                            <option value="NOT LIKE" ${condition.operator === 'NOT LIKE' ? 'selected' : ''}>NOT LIKE (不匹配)</option>
+                            <option value="IS NULL" ${condition.operator === 'IS NULL' ? 'selected' : ''}>IS NULL (为空)</option>
+                            <option value="IS NOT NULL" ${condition.operator === 'IS NOT NULL' ? 'selected' : ''}>IS NOT NULL (不为空)</option>
+                            <option value="BETWEEN" ${condition.operator === 'BETWEEN' ? 'selected' : ''}>BETWEEN...AND (范围)</option>
+                        </select>
+                        ${condition.operator !== 'IS NULL' && condition.operator !== 'IS NOT NULL' ? `
+                            <div class="where-value-container">
+                                ${valueHtml}
+                            </div>
+                        ` : ''}
+                        <button type="button" class="btn btn-danger" onclick="removeWhereCondition(${index})" style="padding: 8px 15px;">删除</button>
+                    </div>
+                `;
+            });
+
+            whereConditionsDiv.innerHTML = html;
+        }
+
+        function addWhereCondition() {
+            whereConditions.push({
+                field: '',
+                operator: '=',
+                value: '',
+                value1: '',
+                value2: ''
+            });
+            updateWhereOptions();
+        }
+
+        function removeWhereCondition(index) {
+            whereConditions.splice(index, 1);
+            updateWhereOptions();
+        }
+
+        function updateWhereCondition(index, field, value) {
+            whereConditions[index][field] = value;
+        }
+
+        function generateSQL() {
+            const tableNamesInput = document.getElementById('tableNames').value.trim();
+            if (!tableNamesInput) {
+                alert('请输入至少一个表名');
+                return;
+            }
+
+            const tableNames = tableNamesInput.split('\n').map(name => name.trim()).filter(name => name);
+            if (tableNames.length === 0) {
+                alert('请输入至少一个表名');
+                return;
+            }
+
+            const aliasMap = getTableAliasMap(tableNames);
+            let selectParts = [];
+            let hasValidFields = false;
+
+            tableNames.forEach(tableName => {
+                const fieldsInput = document.getElementById(`fields_${tableName}`);
+                if (fieldsInput && fieldsInput.value.trim()) {
+                    const fields = fieldsInput.value.split('\n').map(f => f.trim()).filter(f => f);
+                    const alias = aliasMap[tableName];
+                    fields.forEach(field => {
+                        if (field === '*') {
+                            selectParts.push(`${alias}.*`);
+                        } else {
+                            selectParts.push(`${alias}.${field}`);
+                        }
+                    });
+                    hasValidFields = true;
+                }
+            });
+
+            if (!hasValidFields) {
+                alert('请至少输入一个字段');
+                return;
+            }
+
+            const firstTable = tableNames[0];
+            const firstAlias = aliasMap[firstTable];
+            let sql = `SELECT \n`;
+            sql += selectParts.join(',\n');
+            sql += `\nFROM ${firstTable} AS ${firstAlias}\n`;
+
+            const validRelationships = relationships.filter(r =>
+                r.leftTable && r.rightTable && r.leftField && r.rightField
+            );
+
+            validRelationships.forEach(rel => {
+                const existingLeft = tableNames.includes(rel.leftTable);
+                const existingRight = tableNames.includes(rel.rightTable);
+
+                if (existingLeft && existingRight) {
+                    const leftAlias = aliasMap[rel.leftTable];
+                    const rightAlias = aliasMap[rel.rightTable];
+                    sql += `LEFT JOIN ${rel.rightTable} AS ${rightAlias} ON ${leftAlias}.${rel.leftField} = ${rightAlias}.${rel.rightField}\n`;
+                }
+            });
+
+            // 生成WHERE子句
+            const validWhereConditions = whereConditions.filter(c =>
+                c.field && c.operator && (c.operator === 'IS NULL' || c.operator === 'IS NOT NULL' || c.value || (c.operator === 'BETWEEN' && c.value1 && c.value2))
+            );
+
+            if (validWhereConditions.length > 0) {
+                sql += `WHERE `;
+                const whereParts = [];
+                validWhereConditions.forEach(condition => {
+                    let whereClause = '';
+                    switch (condition.operator) {
+                        case 'IS NULL':
+                        case 'IS NOT NULL':
+                            whereClause = `${condition.field} ${condition.operator}`;
+                            break;
+                        case 'BETWEEN':
+                            whereClause = `${condition.field} BETWEEN ${formatValue(condition.value1)} AND ${formatValue(condition.value2)}`;
+                            break;
+                        case 'IN':
+                        case 'NOT IN':
+                            // 处理换行分隔的值，转换为逗号分隔
+                            const inValues = condition.value.split('\n').map(v => v.trim()).filter(v => v).map(formatValue).join(', ');
+                            whereClause = `${condition.field} ${condition.operator} (${inValues})`;
+                            break;
+                        default:
+                            whereClause = `${condition.field} ${condition.operator} ${formatValue(condition.value)}`;
+                    }
+                    whereParts.push(whereClause);
+                });
+                sql += whereParts.join('\n  AND ');
+                sql += '\n';
+            }
+
+            document.getElementById('sqlOutput').textContent = sql;
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copySQL() {
+            const sqlText = document.getElementById('sqlOutput').textContent;
+            if (!sqlText) {
+                alert('没有可复制的SQL语句');
+                return;
+            }
+
+            navigator.clipboard.writeText(sqlText).then(() => {
+                const copyBtn = document.getElementById('copyBtn');
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动复制');
+            });
+        }
+
+        function formatValue(value) {
+            // 简单判断是否为数字
+            if (!isNaN(value) && value.trim() !== '') {
+                return value;
+            }
+            // 如果是字符串，添加引号
+            return `'${value}'`;
+        }
+
+        function clearAll() {
+            document.getElementById('tableNames').value = '';
+            document.getElementById('fieldInputs').innerHTML = '';
+            document.getElementById('fieldEmptyState').style.display = 'block';
+            document.getElementById('relationshipContainer').innerHTML = '';
+            const relationshipEmptyState = document.getElementById('relationshipEmptyState');
+            document.getElementById('relationshipContainer').appendChild(relationshipEmptyState);
+            relationshipEmptyState.style.display = 'block';
+            document.getElementById('addRelationBtn').style.display = 'none';
+            document.getElementById('whereConditions').innerHTML = '';
+            const whereEmptyState = document.getElementById('whereEmptyState');
+            document.getElementById('whereSection').insertBefore(whereEmptyState, document.getElementById('whereConditions'));
+            whereEmptyState.style.display = 'block';
+            document.getElementById('addWhereBtn').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'none';
+            tableData = {};
+            relationships = [];
+            whereConditions = [];
+        }
+    </script>
+</body>
+</html>
