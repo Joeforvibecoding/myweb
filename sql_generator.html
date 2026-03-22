@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>售后物品追溯SQL生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .query-type {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .query-type label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border: 2px solid #e0e0e0;
+        }
+
+        .query-type label:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .query-type input[type="radio"]:checked + span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .query-type input[type="radio"]:checked + span::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+
+        .query-type label:has(input[type="radio"]:checked) {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .date-range {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .date-range-title {
+            font-size: 0.95rem;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .date-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-input-group label {
+            font-size: 0.85rem;
+            color: #666;
+            min-width: 50px;
+        }
+
+        .date-input-group input[type="date"] {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .date-input-group input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .date-hint {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .hint {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .output-section {
+            grid-column: span 1;
+        }
+
+        .sql-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .sql-keyword {
+            color: #569cd6;
+        }
+
+        .sql-string {
+            color: #ce9178;
+        }
+
+        .sql-comment {
+            color: #6a9955;
+        }
+
+        .sql-number {
+            color: #b5cea8;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .copy-btn.copied {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>售后物品追溯SQL生成器</h1>
+            <p>批量生成售后物品码追溯查询SQL语句</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">📥</div>
+                    <span>输入物品码</span>
+                </div>
+
+                <div class="query-type">
+                    <label>
+                        <input type="radio" name="queryType" value="last" checked>
+                        <span>已知上一物品码</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="queryType" value="current">
+                        <span>已知现售后物品码</span>
+                    </label>
+                </div>
+
+                <div class="date-range">
+                    <div class="date-range-title">
+                        <span>📅</span>
+                        <span>收货时间范围（可选）</span>
+                    </div>
+                    <div class="date-inputs">
+                        <div class="date-input-group">
+                            <label>开始:</label>
+                            <input type="date" id="startDate" placeholder="选择开始日期">
+                        </div>
+                        <div class="date-input-group">
+                            <label>结束:</label>
+                            <input type="date" id="endDate" placeholder="选择结束日期">
+                        </div>
+                    </div>
+                    <div class="date-hint">* 将生成 b.received_time between '开始日期' and '结束日期' 条件</div>
+                </div>
+
+                <textarea id="inputCodes" placeholder="请批量输入物品码，每行一个&#10;例如：&#10;ABC123456&#10;DEF789012&#10;GHI345678"></textarea>
+                
+                <div class="hint">
+                    <span>💡</span>
+                    <span>支持批量输入，使用回车换行分隔，自动去重</span>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateSQL()">生成SQL</button>
+                    <button class="btn btn-secondary" onclick="clearInput()">清空</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <span>输入数量:</span>
+                        <span class="stat-value" id="inputCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>有效数量:</span>
+                        <span class="stat-value" id="validCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card output-section">
+                <div class="card-title">
+                    <div class="icon">📤</div>
+                    <span>生成的SQL语句</span>
+                </div>
+                
+                <div class="sql-output" id="sqlOutput">
+                    <button class="copy-btn" id="copyBtn" onclick="copySQL()">复制SQL</button>
+                    <span class="sql-comment">-- 请在左侧输入物品码并点击"生成SQL"按钮</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SQL模板
+        const sqlTemplate = `-- 库表：bid_dw.dwd_after_sale_merchandise_backtrack_all_d（竞拍售后物品回溯）
+-- 库表：bid_dw.dws_bid_financial_settlement_merchandise（回收物品成本结算表）
+-- 库表：bid_dw.dwd_bid_locked_merchandise（销售物品明细表）
+-- 库表：bid_dw.dwd_bid_seller_merchandise（小当竞拍销售物品表）
+
+SELECT a.merchandise_id as \`现售后物品码\`, 
+         b.received_time as \`现售后物品收货时间\`, 
+         b.goods_source as \`现售后物品来源\`, 
+         b.goods_type as \`现售后物品类型\`, 
+         a.last_1_merchandise_id as \`上一物品码\`, 
+         d.order_num as \`上一物品回收订单号\`, 
+         d.goods_source as \`上一物品来源\`, 
+         d.goods_type as \`上一物品类型\`, 
+         d.merchant as \`上一物品商家\`, 
+         d.channel_name as \`上一物品渠道名称\`, 
+         c.bidding_order_no as \`上一物品竞拍主订单号\`, 
+         c.sub_order_no as \`上一物品竞拍子订单号\`, 
+         c.order_time as \`上一物品下单时间\`, 
+         a.deal_price as \`上一物品中标金额\`, 
+         b.cost_price as \`上一物品系统成本价\`, 
+         c.company as \`上一物品销售商家\`, 
+         e.order_no as \`现售后物品中标订单号\`, 
+         e.gmt_created as \`现售后物品订单创建时间\`, 
+         e.gmt_deal as \`现售后物品订单付款时间\`, 
+         e.company as \`现售后物品销售商家\`, 
+         e.deal_price/100 as \`现售后物品中标金额\` 
+         
+ FROM bid_dw.dwd_after_sale_merchandise_backtrack_all_d a 
+ LEFT JOIN bid_dw.dws_bid_financial_settlement_merchandise b on a.merchandise_id = b.goods_code 
+ LEFT JOIN bid_dw.dwd_bid_locked_merchandise c on a.last_1_merchandise_id = c.merchandise_id 
+ LEFT JOIN bid_dw.dws_bid_financial_settlement_merchandise d on a.last_1_merchandise_id = d.goods_code 
+ LEFT JOIN bid_dw.dwd_bid_seller_merchandise e on a.merchandise_id = e.merchandise_id 
+ 
+ -- 筛选条件`;
+
+        // 监听输入变化
+        document.getElementById('inputCodes').addEventListener('input', updateStats);
+
+        function updateStats() {
+            const input = document.getElementById('inputCodes').value;
+            const codes = parseCodes(input);
+            document.getElementById('inputCount').textContent = input.split(/\n/).filter(line => line.trim()).length;
+            document.getElementById('validCount').textContent = codes.length;
+        }
+
+        function parseCodes(input) {
+            return input
+                .split(/\n/)
+                .map(code => code.trim())
+                .filter(code => code.length > 0)
+                .filter((code, index, arr) => arr.indexOf(code) === index); // 去重
+        }
+
+        function generateSQL() {
+            const input = document.getElementById('inputCodes').value;
+            const codes = parseCodes(input);
+
+            if (codes.length === 0) {
+                showOutput('<span class="sql-comment">-- 请输入至少一个物品码</span>');
+                return;
+            }
+
+            const queryType = document.querySelector('input[name="queryType"]:checked').value;
+            const formattedCodes = codes.map(code => `'${code}'`).join(',\n         ');
+
+            // 获取日期范围
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            let whereClause = '';
+            if (queryType === 'last') {
+                whereClause = `WHERE a.last_1_merchandise_id in (${formattedCodes})`;
+            } else {
+                whereClause = `WHERE a.merchandise_id in (${formattedCodes})`;
+            }
+
+            // 添加日期范围条件
+            if (startDate && endDate) {
+                whereClause += `\n   AND b.received_time between '${startDate}' and '${endDate}'`;
+            } else if (startDate) {
+                whereClause += `\n   AND b.received_time >= '${startDate}'`;
+            } else if (endDate) {
+                whereClause += `\n   AND b.received_time <= '${endDate}'`;
+            }
+
+            const finalSQL = `${sqlTemplate}\n${whereClause};`;
+            showOutput(highlightSQL(finalSQL));
+        }
+
+        function highlightSQL(sql) {
+            return sql
+                .replace(/(--.*$)/gm, '<span class="sql-comment">$1</span>')
+                .replace(/\b(SELECT|FROM|LEFT JOIN|ON|WHERE|IN|AS|AND|OR)\b/g, '<span class="sql-keyword">$1</span>')
+                .replace(/'[^']*'/g, '<span class="sql-string">$&</span>')
+                .replace(/\b\d+\b/g, '<span class="sql-number">$&</span>');
+        }
+
+        function showOutput(html) {
+            document.getElementById('sqlOutput').innerHTML = 
+                '<button class="copy-btn" id="copyBtn" onclick="copySQL()">复制SQL</button>' + html;
+        }
+
+        function clearInput() {
+            document.getElementById('inputCodes').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            updateStats();
+            showOutput('<span class="sql-comment">-- 请在左侧输入物品码并点击"生成SQL"按钮</span>');
+        }
+
+        function copySQL() {
+            const outputDiv = document.getElementById('sqlOutput');
+            const text = outputDiv.innerText.replace('复制SQL', '').trim();
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = '已复制!';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.textContent = '复制SQL';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = '已复制!';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.textContent = '复制SQL';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
