@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线下3.0订单查询SQL生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .module-tabs {
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .module-tab {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .module-tab:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .module-tab.active {
+            background: #fff;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* 功能页面 */
+        .function-page {
+            display: none;
+        }
+
+        .function-page.active {
+            display: block;
+        }
+
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .left-panel {
+            flex: 0 0 45%;
+            min-width: 400px;
+        }
+
+        .right-panel {
+            flex: 0 0 55%;
+            min-width: 500px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color 0.3s;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        input[type="date"] {
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .separator {
+            color: #888;
+            font-weight: 600;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+
+        .sql-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 500px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .sql-keyword {
+            color: #569cd6;
+        }
+
+        .sql-string {
+            color: #ce9178;
+        }
+
+        .sql-comment {
+            color: #6a9955;
+        }
+
+        .sql-number {
+            color: #b5cea8;
+        }
+
+        .condition-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            color: #856404;
+            font-size: 13px;
+        }
+
+        .condition-info strong {
+            color: #d39e00;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            min-height: 24px;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        @media (max-width: 1100px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .left-panel,
+            .right-panel {
+                flex: 1 1 100%;
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .sql-output {
+                min-height: 300px;
+                max-height: 400px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .date-range {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .module-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .module-tab {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>线下3.0订单查询SQL生成器</h1>
+            <div class="module-tabs">
+                <button class="module-tab active" id="formalTab" onclick="switchModule('formal')">正式单查询</button>
+                <button class="module-tab" id="testTab" onclick="switchModule('test')">测试单查询</button>
+            </div>
+        </div>
+
+        <!-- 线下3.0正式单模块 -->
+        <div id="formalModule" class="function-page active">
+            <div class="main-layout">
+                <div class="left-panel">
+                    <div class="card">
+                        <div class="card-title">
+                            <span>筛选条件</span>
+                        </div>
+                        
+                        <div class="condition-info">
+                            <strong>提示：</strong>以下条件为并列关系（AND），可同时填写多个条件进行筛选。订单号和渠道ID支持批量输入（每行一个或用逗号分隔）。
+                        </div>
+
+                        <div class="form-group">
+                            <label for="formalOrderNums">订单号 (order_num)</label>
+                            <textarea id="formalOrderNums" rows="3" placeholder="请输入订单号，每行一个或用逗号分隔&#10;例如：&#10;ORDER001&#10;ORDER002&#10;ORDER003"></textarea>
+                            <div class="hint">支持批量输入，按回车键或逗号分隔多个订单号</div>
+                            <div class="tag-list" id="formalOrderNumTags"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="formalChannelIds">渠道ID (channel_id)</label>
+                            <textarea id="formalChannelIds" rows="3" placeholder="请输入渠道ID，每行一个或用逗号分隔&#10;例如：&#10;CH001&#10;CH002&#10;CH003"></textarea>
+                            <div class="hint">支持批量输入，按回车键或逗号分隔多个渠道ID</div>
+                            <div class="tag-list" id="formalChannelIdTags"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>订单创建日期 (gmt_created)</label>
+                            <div class="date-range">
+                                <div class="date-input-group">
+                                    <input type="date" id="formalStartDate">
+                                    <span class="hint">开始日期</span>
+                                </div>
+                                <span class="separator">至</span>
+                                <div class="date-input-group">
+                                    <input type="date" id="formalEndDate">
+                                    <span class="hint">结束日期</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="generateFormalSQL()">
+                                <span>生成SQL</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearFormalAll()">
+                                <span>清空条件</span>
+                            </button>
+                        </div>
+                        <div id="formalGenerateHint" class="condition-info" style="display: none; margin-top: 15px; background: #e3f2fd; border-color: #2196f3; color: #1565c0;">
+                            <strong>提示：</strong>请在复制SQL语句后移步至南天门查询模块。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="card">
+                        <div class="card-title">
+                            <span>生成的SQL语句</span>
+                        </div>
+                        <div class="sql-output" id="formalSqlOutput">
+                            <div class="empty-state">请填写筛选条件后点击"生成SQL"按钮</div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="copyFormalSQL()">
+                                <span>复制SQL</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 线下3.0测试单模块 -->
+        <div id="testModule" class="function-page">
+            <div class="main-layout">
+                <div class="left-panel">
+                    <div class="card">
+                        <div class="card-title">
+                            <span>筛选条件</span>
+                        </div>
+                        
+                        <div class="condition-info">
+                            <strong>提示：</strong>请设置订单创建日期范围进行筛选，其他条件为固定值。
+                        </div>
+
+                        <div class="form-group">
+                            <label>订单创建日期 (a.gmt_created)</label>
+                            <div class="date-range">
+                                <div class="date-input-group">
+                                    <input type="date" id="testStartDate">
+                                    <span class="hint">开始日期</span>
+                                </div>
+                                <span class="separator">至</span>
+                                <div class="date-input-group">
+                                    <input type="date" id="testEndDate">
+                                    <span class="hint">结束日期</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="generateTestSQL()">
+                                <span>生成SQL</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearTestAll()">
+                                <span>清空条件</span>
+                            </button>
+                        </div>
+                        <div id="testGenerateHint" class="condition-info" style="display: none; margin-top: 15px; background: #e3f2fd; border-color: #2196f3; color: #1565c0;">
+                            <strong>提示：</strong>请在复制SQL语句后移步至南天门查询模块。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="card">
+                        <div class="card-title">
+                            <span>生成的SQL语句</span>
+                        </div>
+                        <div class="sql-output" id="testSqlOutput">
+                            <div class="empty-state">请设置日期范围后点击"生成SQL"按钮</div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="copyTestSQL()">
+                                <span>复制SQL</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 正式单SQL模板
+        const formalSqlTemplate = `SELECT 
+    a.order_num AS \`订单号\`, 
+    json_extract(c.ext_json, '$.thirdOrderNum') AS \`第三方订单号\`, 
+    json_extract(c.ext_json, '$.employeeId') AS \`转转员工id\`, 
+    json_extract(c.ext_json, '$.shopId') AS \`转转门店id\`, 
+    a.order_date AS \`下单日期\`, 
+    a.trans_time AS \`成交时间\`, 
+    a.partnership_name AS \`合作方\`, 
+    a.channel_id AS \`渠道id\`, 
+    a.merchant_name AS \`商户\`, 
+    a.provider_name AS \`代理商\`, 
+    a.store_name AS \`门店\`, 
+    a.provider_id AS \`代理商id\`, 
+    a.merchant_id AS \`商户id\`, 
+    d.recycler_id AS \`回收商ID\`, 
+    a.store_type AS \`门店类别\`, 
+    a.store_level AS \`门店级别\`, 
+    a.store_assistant_name AS \`店员名字\`, 
+    a.phone AS \`账户手机号\`, 
+    a.bd_user_name AS \`bd用户名\`, 
+    a.imei AS \`回收IMEI号\`, 
+    case when a.order_status = '' then '退单中' 
+    else a.order_status end  AS \`订单状态\`, 
+    c.product_name AS \`预估机型\`, 
+    a.brand AS \`旧机品牌\`, 
+    'null' AS \`估价机框选项\`, 
+    'null' AS \`估价等级\`, 
+    'null' AS \`估价SKUID\`, 
+    'null' AS \`估价SKU选项\`, 
+    f.recycler AS \`报价师id\`, 
+    f.name AS \`报价师名字\`, 
+    a.province_name AS \`省份\`, 
+    a.city_name AS \`城市\`, 
+    a.county_name AS \`县区\`, 
+    a.store_id AS \`门店id\`, 
+    c.activity_remark AS \`活动备注\`, 
+    'null' AS \`券投放渠道\`, 
+    a.old_type AS \`旧机品类\`, 
+    concat('JP', a.order_num) AS \`竞价订单号\`, 
+    a.activity_type AS \`活动是否是专属活动\`, 
+        d.initial_recycle_price/100 as \`初始报价\` , 
+    d.recycle_price/100 as \`回收价（用户）\` , 
+    d.provider_id as \`代理商id\` , 
+    d.provider_commission/100 as \`代理商佣金\` , 
+    d.provider_price/100 as \`代理商收入\` , 
+    d.merchant_id as \`零售商id\` , 
+    d.merchant_commission/100 as \`零售商佣金\` , 
+    d.merchant_change/100 as \`零售商零钱\` , 
+    d.merchant_price/100 as \`零售商收入\` , 
+    d.manager_commission/100 as \`店长红包\` , 
+    d.assistant_commission/100 as \`店员红包\` , 
+    d.down_prices/100 as \`压价总额\` , 
+    d.provider_down_prices/100 as \`代理商自主调价分润\` , 
+    d.merchant_down_prices/100 as \`零售商自主调价分润\` , 
+    d.manager_down_prices/100 as \`店长自主调价分润\` , 
+    d.assistant_down_prices/100 as \`做单导购自主调价分润\` , 
+    d.manager_price/100 as \`店长收入\` , 
+    d.assistant_price/100 as \`店员收入\` , 
+    d.recycler_service_price/100 as \`平台服务费\` , 
+    d.recycler_logistics_price/100 as \`回收商物流费\` , 
+    d.recycler_activity_price/100 as \`活动服务费\` , 
+    d.recycler_total_price/100 as \`回收商总支出\` , 
+    d.bargaining_price/100 as \`议价金额\` 
+FROM  recycle_dw.dwd_offline_order_commission a 
+    LEFT JOIN easychange_db_st.st_yh_order_tb_offline_order c ON a.order_num = c.order_num 
+    LEFT JOIN easychange_db_st.st_yh_sales_channel_tb_order_commission d ON a.order_num = d.order_num 
+    LEFT JOIN easychange_db_st.st_yh_recycler_tb_ec_bid_recycler_user e ON d.recycler_id = e.id 
+    LEFT JOIN ( 
+        SELECT 
+            a.order_num, 
+            a.recycler, 
+            b.name 
+        FROM 
+            easychange_db_st.st_yh_recycler_tb_ec_bid_order a 
+            LEFT JOIN easychange_db_st.st_yh_recycler_tb_ec_bid_recycler_user b ON a.recycler = b.id 
+    ) f ON a.order_num = f.order_num 
+WHERE 
+{{WHERE_CLAUSE}}
+    AND c.order_status IN (7, 8, 9, 10, 11, 12)`;
+
+        // 测试单SQL模板
+        const testSqlTemplate = `SELECT 
+    a.order_num, 
+    case when a.order_status = '7' then '已成交' 
+    when a.order_status = '8' then '已发货' 
+    when a.order_status = '9' then '已收货' 
+    when a.order_status = '10' then '交易完成' 
+    when a.order_status = '11' then '已退单' 
+    end as order_status 
+FROM 
+    easychange_db_st.st_yh_order_tb_offline_order a 
+    LEFT JOIN recycle_dw.dwd_offline_order_commission b ON a.order_num = b.order_num 
+    left join easychange_db_st.st_yh_sales_channel_tb_sale_channel c on a.channel_id = c.channel_id 
+WHERE 
+    b.order_num IS NULL 
+    and c.order_type = 3 
+{{DATE_CLAUSE}}
+    AND a.order_status IN (7, 8, 9, 10, 11)`;
+
+        // 模块切换功能
+        function switchModule(module) {
+            // 更新标签样式
+            document.getElementById('formalTab').classList.remove('active');
+            document.getElementById('testTab').classList.remove('active');
+            
+            // 隐藏所有模块
+            document.getElementById('formalModule').classList.remove('active');
+            document.getElementById('testModule').classList.remove('active');
+            
+            // 显示选中模块
+            if (module === 'formal') {
+                document.getElementById('formalTab').classList.add('active');
+                document.getElementById('formalModule').classList.add('active');
+                setDefaultFormalDates();
+            } else {
+                document.getElementById('testTab').classList.add('active');
+                document.getElementById('testModule').classList.add('active');
+                setDefaultTestDates();
+            }
+        }
+
+        // 解析输入文本为数组
+        function parseInput(text) {
+            if (!text || !text.trim()) return [];
+            return text
+                .split(/[\n,]+/)
+                .map(item => item.trim())
+                .filter(item => item.length > 0);
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // SQL语法高亮
+        function highlightSQL(sql) {
+            return sql
+                .replace(/(\bSELECT\b|\bFROM\b|\bWHERE\b|\bLEFT\b|\bJOIN\b|\bON\b|\bAND\b|\bOR\b|\bIN\b|\bBETWEEN\b|\bCASE\b|\bWHEN\b|\bTHEN\b|\bELSE\b|\bEND\b|\bAS\b|\bCONCAT\b|\bJSON_EXTRACT\b)/gi, 
+                    '<span class="sql-keyword">$1</span>')
+                .replace(/('[^']*')/g, '<span class="sql-string">$1</span>')
+                .replace(/(\d+)/g, '<span class="sql-number">$1</span>')
+                .replace(/(--.*$)/gm, '<span class="sql-comment">$1</span>');
+        }
+
+        // 显示提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show';
+            if (type === 'success') {
+                toast.classList.add('success');
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 格式化日期
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // ==================== 正式单功能 ====================
+        
+        // 更新标签显示
+        function updateFormalTags(inputId, tagsContainerId) {
+            const input = document.getElementById(inputId);
+            const tagsContainer = document.getElementById(tagsContainerId);
+            const values = parseInput(input.value);
+            
+            tagsContainer.innerHTML = values.map((val, index) => 
+                `<span class="tag">${escapeHtml(val)}<span class="tag-remove" onclick="removeFormalTag('${inputId}', '${tagsContainerId}', ${index})">×</span></span>`
+            ).join('');
+        }
+
+        function removeFormalTag(inputId, tagsContainerId, index) {
+            const input = document.getElementById(inputId);
+            const values = parseInput(input.value);
+            values.splice(index, 1);
+            input.value = values.join('\n');
+            updateFormalTags(inputId, tagsContainerId);
+        }
+
+        // 监听输入变化
+        document.getElementById('formalOrderNums').addEventListener('input', () => {
+            updateFormalTags('formalOrderNums', 'formalOrderNumTags');
+        });
+
+        document.getElementById('formalChannelIds').addEventListener('input', () => {
+            updateFormalTags('formalChannelIds', 'formalChannelIdTags');
+        });
+
+        // 生成正式单SQL
+        function generateFormalSQL() {
+            const orderNums = parseInput(document.getElementById('formalOrderNums').value);
+            const channelIds = parseInput(document.getElementById('formalChannelIds').value);
+            const startDate = document.getElementById('formalStartDate').value;
+            const endDate = document.getElementById('formalEndDate').value;
+
+            const conditions = [];
+
+            if (orderNums.length > 0) {
+                const formattedOrderNums = orderNums.map(num => `'${num}'`).join(', ');
+                conditions.push(`    a.order_num IN (${formattedOrderNums})`);
+            }
+
+            if (channelIds.length > 0) {
+                const formattedChannelIds = channelIds.map(id => `'${id}'`).join(', ');
+                conditions.push(`    a.channel_id IN (${formattedChannelIds})`);
+            }
+
+            if (startDate && endDate) {
+                conditions.push(`    c.gmt_created BETWEEN '${startDate}' AND '${endDate}'`);
+            } else if (startDate) {
+                conditions.push(`    c.gmt_created >= '${startDate}'`);
+            } else if (endDate) {
+                conditions.push(`    c.gmt_created <= '${endDate}'`);
+            }
+
+            if (conditions.length === 0) {
+                showToast('请至少填写一个筛选条件', 'error');
+                return;
+            }
+
+            const whereClause = conditions.join('\n    AND ');
+            const finalSQL = formalSqlTemplate.replace('{{WHERE_CLAUSE}}', whereClause);
+
+            document.getElementById('formalSqlOutput').innerHTML = highlightSQL(finalSQL);
+            document.getElementById('formalGenerateHint').style.display = 'block';
+            
+            showToast('SQL生成成功！', 'success');
+        }
+
+        // 复制正式单SQL
+        function copyFormalSQL() {
+            const sqlOutput = document.getElementById('formalSqlOutput');
+            const text = sqlOutput.textContent || sqlOutput.innerText;
+            
+            if (!text || text.includes('请填写筛选条件')) {
+                showToast('请先生成SQL', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('SQL已复制到剪贴板！', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('SQL已复制到剪贴板！', 'success');
+            });
+        }
+
+        // 清空正式单条件
+        function clearFormalAll() {
+            document.getElementById('formalOrderNums').value = '';
+            document.getElementById('formalChannelIds').value = '';
+            document.getElementById('formalStartDate').value = '';
+            document.getElementById('formalEndDate').value = '';
+            document.getElementById('formalOrderNumTags').innerHTML = '';
+            document.getElementById('formalChannelIdTags').innerHTML = '';
+            document.getElementById('formalSqlOutput').innerHTML = '<div class="empty-state">请填写筛选条件后点击"生成SQL"按钮</div>';
+            document.getElementById('formalGenerateHint').style.display = 'none';
+            showToast('已清空所有条件', 'success');
+        }
+
+        // 设置正式单默认日期
+        function setDefaultFormalDates() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            document.getElementById('formalStartDate').value = formatDate(firstDay);
+            document.getElementById('formalEndDate').value = formatDate(lastDay);
+        }
+
+        // ==================== 测试单功能 ====================
+
+        // 生成测试单SQL
+        function generateTestSQL() {
+            const startDate = document.getElementById('testStartDate').value;
+            const endDate = document.getElementById('testEndDate').value;
+
+            let dateClause = '';
+            if (startDate && endDate) {
+                dateClause = `    AND a.gmt_created BETWEEN '${startDate}' AND '${endDate}'\n`;
+            } else if (startDate) {
+                dateClause = `    AND a.gmt_created >= '${startDate}'\n`;
+            } else if (endDate) {
+                dateClause = `    AND a.gmt_created <= '${endDate}'\n`;
+            } else {
+                showToast('请设置日期范围', 'error');
+                return;
+            }
+
+            const finalSQL = testSqlTemplate.replace('{{DATE_CLAUSE}}', dateClause);
+
+            document.getElementById('testSqlOutput').innerHTML = highlightSQL(finalSQL);
+            document.getElementById('testGenerateHint').style.display = 'block';
+            
+            showToast('SQL生成成功！', 'success');
+        }
+
+        // 复制测试单SQL
+        function copyTestSQL() {
+            const sqlOutput = document.getElementById('testSqlOutput');
+            const text = sqlOutput.textContent || sqlOutput.innerText;
+            
+            if (!text || text.includes('请设置日期范围')) {
+                showToast('请先生成SQL', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('SQL已复制到剪贴板！', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('SQL已复制到剪贴板！', 'success');
+            });
+        }
+
+        // 清空测试单条件
+        function clearTestAll() {
+            document.getElementById('testStartDate').value = '';
+            document.getElementById('testEndDate').value = '';
+            document.getElementById('testSqlOutput').innerHTML = '<div class="empty-state">请设置日期范围后点击"生成SQL"按钮</div>';
+            document.getElementById('testGenerateHint').style.display = 'none';
+            showToast('已清空所有条件', 'success');
+        }
+
+        // 设置测试单默认日期
+        function setDefaultTestDates() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            document.getElementById('testStartDate').value = formatDate(firstDay);
+            document.getElementById('testEndDate').value = formatDate(lastDay);
+        }
+
+        // 页面加载时默认进入正式单模块
+        window.onload = function() {
+            setDefaultFormalDates();
+        };
+    </script>
+</body>
+</html>
