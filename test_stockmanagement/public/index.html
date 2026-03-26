@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品查询系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>商品查询系统</h1>
+        <div class="query-box">
+            <label for="goodsCode">请输入商品编码：</label>
+            <input type="text" id="goodsCode" placeholder="输入goods_code">
+            <button onclick="queryGoods()">查询</button>
+        </div>
+        <div id="result" class="result"></div>
+
+        <div class="table-section">
+            <h2>查询结果</h2>
+            <div class="table-container">
+                <table id="resultTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>商品编码</th>
+                            <th>成本价格</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-actions">
+                <button onclick="exportToCsv()" class="export-btn">导出CSV</button>
+            </div>
+            <div id="tableInfo" class="table-info"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="update-section">
+            <h2>修改商品成本价</h2>
+            <div class="update-box">
+                <label for="updateGoodsCode">请输入商品编码：</label>
+                <input type="text" id="updateGoodsCode" placeholder="输入goods_code">
+                <button onclick="prepareUpdate()">查询修改</button>
+            </div>
+            <div id="updateForm" class="update-form" style="display: none;">
+                <div class="result-item">
+                    <span class="result-label">商品编码：</span><span id="updateGoodsCodeDisplay"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">当前成本价：</span>¥<span id="currentCostPrice"></span>
+                </div>
+                <div class="update-input-box">
+                    <label for="newCostPrice">新成本价：</label>
+                    <input type="number" id="newCostPrice" placeholder="输入新cost_price" step="0.01">
+                    <button onclick="submitUpdate()">提交修改</button>
+                </div>
+            </div>
+            <div id="updateResult" class="result"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="delete-section">
+            <h2>删除商品</h2>
+            <div class="delete-box">
+                <label for="deleteGoodsCode">请输入商品编码：</label>
+                <input type="text" id="deleteGoodsCode" placeholder="输入goods_code">
+                <button onclick="prepareDelete()" class="delete-btn">删除</button>
+            </div>
+            <div id="deleteResult" class="result"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="import-section">
+            <h2>批量导入商品</h2>
+            <div class="import-box">
+                <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                <button onclick="document.getElementById('csvFile').click()">选择CSV文件</button>
+                <span id="fileName" class="file-name">未选择文件</span>
+                <button onclick="importCsv()" class="import-btn">添加行记录</button>
+            </div>
+            <div class="csv-template">
+                <p>CSV格式要求：</p>
+                <code>goods_code,cost_price<br>ABC001,100.50<br>ABC002,200.00</code>
+            </div>
+            <div id="importResult" class="result"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

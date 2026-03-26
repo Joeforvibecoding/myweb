@@ -1,0 +1,348 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+.query-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    color: #555;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+input {
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+button {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.result {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+}
+
+.result.success {
+    display: block;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.result.error {
+    display: block;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.result.loading {
+    display: block;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    text-align: center;
+}
+
+.result-item {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+}
+
+.result-label {
+    font-weight: bold;
+    color: #555;
+}
+
+.divider {
+    margin: 30px 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #ddd, transparent);
+}
+
+.import-section h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.update-section h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.update-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.update-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f0f4ff;
+    border-radius: 10px;
+    border: 2px solid #667eea;
+}
+
+.update-input-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.delete-section h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.delete-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.delete-btn {
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+}
+
+.delete-btn:hover {
+    box-shadow: 0 5px 20px rgba(255, 65, 108, 0.4);
+}
+
+.table-section {
+    margin-top: 20px;
+}
+
+.table-section h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 14px;
+}
+
+.data-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.data-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.data-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.data-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.data-table tbody tr:nth-child(even):hover {
+    background: #f0f4ff;
+}
+
+.highlight-row {
+    background: #fff3cd !important;
+    animation: highlightPulse 2s ease-in-out;
+}
+
+@keyframes highlightPulse {
+    0% {
+        background: #fff3cd;
+    }
+    50% {
+        background: #ffeaa7;
+    }
+    100% {
+        background: #fff3cd;
+    }
+}
+
+.no-data {
+    text-align: center;
+    color: #666;
+    padding: 30px !important;
+    font-style: italic;
+}
+
+.table-info {
+    margin-top: 10px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.table-actions {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    padding: 10px 25px;
+    font-size: 14px;
+}
+
+.export-btn:hover {
+    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+}
+
+.import-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-name {
+    color: #666;
+    font-size: 14px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.import-btn {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.import-btn:hover {
+    box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+}
+
+.csv-template {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.csv-template p {
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.csv-template code {
+    display: block;
+    background: #e9ecef;
+    padding: 10px;
+    border-radius: 5px;
+    color: #495057;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+}
+
+.error-list {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+}
+
+.error-list p {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.error-list ul {
+    margin-left: 20px;
+    color: #721c24;
+}
+
+.error-list li {
+    margin: 3px 0;
+}
